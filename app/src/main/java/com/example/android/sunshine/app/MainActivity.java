@@ -15,6 +15,7 @@
  */
 package com.example.android.sunshine.app;
 
+import android.app.FragmentTransaction;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
@@ -25,19 +26,61 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
-public class MainActivity extends ActionBarActivity {
-
+public class MainActivity extends ActionBarActivity implements ForecastFragment.Callback {
+    private static final String DETAILFRAGMENT_TAG = "DFTAG";
     private final String LOG_TAG = MainActivity.class.getSimpleName();
-
+    private String currentLocation;
+    private boolean isMetric;
+    boolean mTwoPane;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        if (savedInstanceState == null) {
-            getSupportFragmentManager().beginTransaction()
-                    .add(R.id.container, new ForecastFragment())
-                    .commit();
+
+        if(findViewById(R.id.weather_detail_container) != null) {
+            mTwoPane = true;
+
+            if(savedInstanceState == null) {
+                getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.weather_detail_container, new DetailFragment(), DETAILFRAGMENT_TAG)
+                        .commit();
+            }
+
+        } else {
+            mTwoPane = false;
         }
+
+        ForecastFragment ff = (ForecastFragment)getSupportFragmentManager().findFragmentById(R.id.fragment_forecast);;
+        ff.setUseTodayLayout(!mTwoPane);
+
+        currentLocation = Utility.getPreferredLocation(this);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        ForecastFragment ff = (ForecastFragment)getSupportFragmentManager().findFragmentById(R.id.fragment_forecast);
+
+        String loc = Utility.getPreferredLocation(this);
+        boolean metric = Utility.isMetric(this);
+
+        if(loc != null && !loc.equals(currentLocation)) {
+            if(ff != null) {
+                ff.onLocationChanged();
+                currentLocation = loc;
+            }
+
+            DetailFragment df = (DetailFragment) getSupportFragmentManager().findFragmentByTag(DETAILFRAGMENT_TAG);
+            if (df != null) {
+                df.onLocationChanged(loc);
+            }
+        } else if (metric != isMetric){
+            if(ff != null) {
+                ff.onUnitsChannged();
+                isMetric = metric;
+            }
+        }
+
     }
 
     @Override
@@ -90,4 +133,20 @@ public class MainActivity extends ActionBarActivity {
             Log.d(LOG_TAG, "Couldn't call " + location + ", no receiving apps installed!");
         }
     }
+
+    public void onItemSelected(Uri dateUri) {
+
+        if(mTwoPane) {
+            DetailFragment details = DetailFragment.newInstance(dateUri);
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.weather_detail_container, details, DETAILFRAGMENT_TAG)
+                    .commit();
+        } else {
+            Intent intent = new Intent(this, DetailActivity.class);
+            intent.putExtra(Intent.EXTRA_TEXT, dateUri.toString());
+            startActivity(intent);
+        }
+
+    }
+
 }

@@ -1,8 +1,16 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/apk/res-auto">
 
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+    <style name="AppTheme" parent="Base.Theme.AppCompat.Light.DarkActionBar">
         <!-- Customize your theme here. -->
+        <item name="android:actionBarStyle" tools:ignore="NewApi">@style/ActionBarStyle</item>
+        <item name="actionBarStyle">@style/ActionBarStyle</item>
+    </style>
+
+    <style name="ActionBarStyle" tools:ignore="NewApi" parent="@style/Widget.AppCompat.Light.ActionBar.Solid">
+        <item name="android:background">@color/sunshine_background_light_blue</item>
+        <item name="background">@color/sunshine_background_light_blue</item>
+        <item name="android:icon">@mipmap/ic_launcher</item>
     </style>
 
 </resources>
